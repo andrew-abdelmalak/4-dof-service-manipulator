@@ -1,0 +1,29 @@
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 50
+
+Joint_1:
+  type: position_controllers/JointPositionController
+  joint: Joint_1
+  pid: {p: 50.0, i: 0.0, d: 4.0}
+
+Joint_2:
+  type: position_controllers/JointPositionController
+  joint: Joint_2
+  pid: {p: 50.0, i: 0.0, d: 4.0}
+
+Joint_3:
+  type: position_controllers/JointPositionController
+  joint: Joint_3
+  pid: {p: 50.0, i: 0.0, d: 4.0}
+
+Joint_4:
+  type: position_controllers/JointPositionController
+  joint: Joint_4
+  pid: {p: 50.0, i: 0.0, d: 4.0}
+
+Joint_5:
+  type: position_controllers/JointPositionController
+  joint: Joint_5
+  pid: {p: 20.0, i: 0.0, d: 2.0}
+

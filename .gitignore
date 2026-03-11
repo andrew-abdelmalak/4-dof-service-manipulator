@@ -1,0 +1,72 @@
+# ========================
+# OS Generated Files
+# ========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+__MACOSX/
+
+# ========================
+# IDE / Editor
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.env
+.venv/
+venv/
+
+# ========================
+# MATLAB / Simulink
+# ========================
+*.asv
+*.slxc
+*.slx.autosave
+*.slx.r20*
+*.mexa64
+*.mexmaci64
+*.mexw64
+slprj/
+*.mat
+
+# ========================
+# ROS / Catkin
+# ========================
+build/
+devel/
+logs/
+.catkin_workspace
+.catkin_tools/
+
+# ========================
+# Videos (hosted externally)
+# ========================
+*.mp4
+*.mkv
+*.avi
+*.mov
+
+# ========================
+# Archives
+# ========================
+*.zip
+*.tar.gz
+*.rar
