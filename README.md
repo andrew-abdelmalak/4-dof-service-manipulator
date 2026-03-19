@@ -247,6 +247,28 @@ See [`hardware/arduino/README.md`](hardware/arduino/README.md) for detailed setu
 | **Samir Yacoub** | Mechatronics Engineering, GUC |
 | **Youssef Salama** | Mechatronics Engineering, GUC |
 
+---
+
+## Acknowledgments
+
+This project was developed as part of the Mechatronics Engineering program at the German University in Cairo (GUC).
+
+---
+
+## References
+
+1. S. Park *et al.*, "Robot versus human barista: Comparison of volatile compounds and consumers' acceptance, sensory profile, and emotional response of brewed coffee," *Food Research International*, vol. 172, p. 113119, 2023.
+2. A. Setiawan and A. Ma'arif, "Stirring system design for automatic coffee maker using OMRON PLC and PID control," *Int. J. Robotics and Control Systems*, vol. 1, no. 1, pp. 1–8, 2021.
+3. M. Michalková *et al.*, "Automating the handling process of a coffee machine using a robotic manipulator," in *Proc. IEEE Int. Conf. ETFA*, 2024.
+4. H. P. Nurba *et al.*, "Performance evaluation of 3 DOF arm robot with forward kinematics Denavit–Hartenberg method," in *Proc. IEEE TSSA*, 2022.
+5. H. D. Salman, M. N. Hamzah, and S. H. Bakhy, "Kinematics analysis and implementation of three degrees of freedom robotic arm by using MATLAB," *The Iraqi Journal for Mechanical and Material Engineering*, vol. 21, no. 2, pp. 118–129, 2021.
+6. M. A. Saad *et al.*, "Development of an automated coffee preparation system using a robotic manipulator," *J. Mechatronics, Robotics, and Systems Programming*, vol. 31, no. 38, pp. 45–52, 2024.
+7. A. Waluyo *et al.*, "Robot arm design for coffee maker Arduino based," in *Proc. 2nd Borobudur Int. Symposium on Science and Technology*, Atlantis Press, 2021, pp. 438–442.
+8. J. J. Craig, *Introduction to Robotics: Mechanics and Control*, 3rd ed. Pearson Prentice Hall, 2005.
+9. B. Siciliano *et al.*, *Robotics: Modelling, Planning and Control*. Springer, 2009.
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
