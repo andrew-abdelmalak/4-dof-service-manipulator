@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 
+
 def get_task_space_trajectory(X_start, X_end, total_time, dt):
     """
     Generates a Linear Task-Space Trajectory.

@@ -14,13 +14,12 @@ from __future__ import annotations
 import numpy as np
 import rospy
 from geometry_msgs.msg import PoseStamped
-from std_msgs.msg import Float64
-
 from kinematics import (
+    forward_velocity_kinematics,
     inverse_kinematics_func,
     inverse_velocity_kinematics,
-    forward_velocity_kinematics,
 )
+from std_msgs.msg import Float64
 
 # ---------------------------------------------------------------------------
 # User-editable inputs

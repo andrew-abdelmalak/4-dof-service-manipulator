@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-import rospy
-from std_msgs.msg import Float64, Float64MultiArray, MultiArrayDimension
-from geometry_msgs.msg import PoseStamped
 import numpy as np
-
+import rospy
+from geometry_msgs.msg import PoseStamped
 from kinematics import (
-    jacobian_matrix,
-    inverse_kinematics_func,
     forward_velocity_kinematics,
+    inverse_kinematics_func,
+    jacobian_matrix,
 )
+from std_msgs.msg import Float64, Float64MultiArray, MultiArrayDimension
 
 # Latest end-effector state from Gazebo
 ee_pos = None    # np.array([x, y, z])

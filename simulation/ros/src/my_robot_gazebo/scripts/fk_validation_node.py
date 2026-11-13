@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import rospy
-from std_msgs.msg import Float64
-from geometry_msgs.msg import PoseStamped
-from forward_kinematics import forward_kinematics_func # This now imports the modified version
 import numpy as np
+import rospy
+from forward_kinematics import forward_kinematics_func  # This now imports the modified version
+from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Float64
 
 latest_ee_pose = None
 

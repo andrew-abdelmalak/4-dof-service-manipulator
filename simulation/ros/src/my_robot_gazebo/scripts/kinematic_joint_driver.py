@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-import rospy
-from std_msgs.msg import Float64
-from sensor_msgs.msg import JointState
-from gazebo_msgs.srv import SetModelConfiguration
-import threading
 import math
+import threading
+
+import rospy
+from gazebo_msgs.srv import SetModelConfiguration
+from sensor_msgs.msg import JointState
+from std_msgs.msg import Float64
+
 
 def almost_equal(a, b, eps=1e-4):
     return abs(a - b) <= eps or (math.isfinite(a) and math.isfinite(b) and abs((a-b)/(abs(b)+1e-9)) < eps)

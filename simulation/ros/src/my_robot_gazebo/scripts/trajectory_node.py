@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-import rospy
-import numpy as np
 import csv
 import os
-from std_msgs.msg import Float64
-from trajectory_planner import get_task_space_trajectory, get_circular_trajectory
+
+import numpy as np
+import rospy
 from kinematics import inverse_kinematics_func
+from std_msgs.msg import Float64
+from trajectory_planner import get_circular_trajectory, get_task_space_trajectory
+
 
 def normalize_angle(angle):
     """Wraps an angle to [-pi, pi]."""

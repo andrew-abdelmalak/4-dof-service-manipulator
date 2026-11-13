@@ -3,6 +3,7 @@ import rospy
 from gazebo_msgs.srv import GetLinkState
 from geometry_msgs.msg import PoseStamped
 
+
 def main():
     rospy.init_node("ee_pose_from_gazebo")
     link_name = rospy.get_param("~link_name", "my_robot::Gripper")

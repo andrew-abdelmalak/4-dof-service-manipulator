@@ -18,3 +18,17 @@ catkin_package(
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
+
+catkin_install_python(PROGRAMS
+  scripts/ee_pose_from_gazebo.py
+  scripts/fk_validation_node.py
+  scripts/forward_kinematics.py
+  scripts/ik_validation_node.py
+  scripts/kinematic_joint_driver.py
+  scripts/kinematics.py
+  scripts/trajectory_node.py
+  scripts/trajectory_planner.py
+  scripts/validate_roundtrip.py
+  scripts/velocity_path_node.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
