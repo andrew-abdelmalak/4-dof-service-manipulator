@@ -1,263 +1,61 @@
-# 🤖 Tea-Making Robot Arm - User Guide
+# Arduino Firmware and Serial Trajectory Controller
 
-## 📋 Overview
+Open-loop trajectory execution controller for the 4-DOF service manipulator on an Arduino Uno (`receiver/receiver.ino`) driven over USB serial by `send_trajectory.py`.
 
-This project controls a **4-DOF (4 Degrees of Freedom) robotic arm** designed to perform automated tea-making tasks. The robot features **4 joints** for precise movement and a **gripper** (not counted as a DOF) for object manipulation.
+## Hardware Mapping and Firmware Constants
 
-### Robot Specifications
-- **Degrees of Freedom:** 4 (Joints 1-4)
-- **End Effector:** 1 Gripper (Joint 5)
-- **Control:** Serial communication via Arduino
-- **Function:** Automated tea preparation and serving
+- **Board:** Arduino Uno (`arduino:avr:uno`)
+- **Baud rate:** 115200
+- **Servos attached in firmware (`receiver.ino`):** five `Servo` instances on PWM pins `3` (base J1), `5` (shoulder J2), `6` (elbow J3), `9` (wrist J4), and `10` (gripper). One additional physical SG90 servo acts as a fixed mechanical pivot in the 4-DOF arm assembly.
+- **Gripper limits:** `GRIPPER_OPEN = 90.0` deg (servo 180 deg), `GRIPPER_CLOSED = 30.0` deg (servo 120 deg), `GRIPPER_MIN_SAFE = 30.0` deg safety floor.
 
----
+## Trajectory CSV Files
 
-## 🎯 System Components
+All five CSV files live in `trajectories/` and contain 4 columns (`J1, J2, J3, J4` in degrees). Header rows are skipped automatically if present.
 
-### Hardware
-1. **Arduino Board** (with servo connections)
-2. **5 Servo Motors:**
-   - Joint 1-4: Robot arm movement (4-DOF)
-   - Joint 5: Gripper for grasping objects
-3. **USB Cable** for Arduino-to-Computer connection
+| Phase | CSV File | Waypoints | Motion |
+|---|---|---:|---|
+| 1 | `trajectory_data_combined_1_square1.csv` | 103 | Sugar pick-and-place square path |
+| 2 | `trajectory_data_combined_2_square2.csv` | 103 | Spoon approach square path |
+| 3 | `trajectory_data_combined_3_square2_rev.csv` | 103 | Return to cup along reverse square path |
+| 4 | `trajectory_data_combined_4_transition.csv` | 41 | Linear transition into stirring posture |
+| 5 | `trajectory_data_combined_5_circle.csv` | 101 | Circular stirring loop (executed 3x) |
 
-### Software Files
-1. **`receiver.ino`** - Arduino firmware (runs on Arduino)
-2. **`send_trajectory.py`** - Python trajectory controller (runs on computer)
-3. **CSV Trajectory Files** (in `trajectories/` folder):
-   - `trajectory_data_combined_1_square1.csv`
-   - `trajectory_data_combined_2_square2.csv`
-   - `trajectory_data_combined_3_square2_rev.csv`
-   - `trajectory_data_combined_4_transition.csv`
-   - `trajectory_data_combined_5_circle.csv`
+Total unique waypoints: **451** (653 streamed commands during a full 3-cycle stirring run).
 
----
+## Compile Firmware Without Hardware
 
-## 🚀 Setup Instructions
+Verify the firmware compiles cleanly using `arduino-cli`:
 
-### Step 1: Upload Arduino Firmware
-
-1. **Open Arduino IDE**
-   - Download from [arduino.cc](https://www.arduino.cc/en/software) if not installed
-
-2. **Open the receiver sketch**
-   - File → Open → Navigate to `receiver/receiver.ino`
-
-3. **Select your Arduino board**
-   - Tools → Board → Select your Arduino model (e.g., Arduino Uno)
-
-4. **Select the correct port**
-   - Tools → Port → Select the port with your Arduino
-   - Windows: `COM3`, `COM4`, etc.
-   - Mac/Linux: `/dev/cu.usbserial-110` or similar
-
-5. **Upload the code**
-   - Click the **Upload** button (→) or press `Ctrl+U` (Windows) / `Cmd+U` (Mac)
-   - Wait for "Done uploading" message
-
-6. **Verify connection**
-   - Open Serial Monitor (Tools → Serial Monitor)
-   - Set baud rate to **115200**
-   - You should see: `ARDUINO_CONNECTED`
-
----
-
-### Step 2: Run the Python Trajectory Controller
-
-#### Prerequisites
-Make sure you have Python 3 installed with the required library:
 ```bash
-pip install pyserial
+arduino-cli core update-index
+arduino-cli core install arduino:avr
+arduino-cli lib install Servo
+arduino-cli compile --warnings all --fqbn arduino:avr:uno hardware/arduino/receiver/receiver.ino
 ```
 
-#### Configuration
-1. **Open `send_trajectory.py`** in a text editor
-2. **Update the serial port** (lines 7-9) to match your Arduino port:
-   ```python
-   SERIAL_PORT = '/dev/cu.usbserial-110'  # Mac/Linux
-   # or
-   SERIAL_PORT = 'COM3'  # Windows
-   ```
+## Validate Trajectory Files Offline
 
-#### Running the Program
-1. **Open a terminal/command prompt** in the `` directory
+Run `send_trajectory.py` in `--dry-run` mode from any working directory to load, parse, and summarize all 451 waypoints without opening a serial port:
 
-2. **Run the script:**
-   ```bash
-   python send_trajectory.py
-   ```
-
-3. **Expected sequence:**
-   - Script connects to Arduino
-   - Loads 5 trajectory CSV files
-   - Executes the tea-making sequence automatically
-
----
-
-## 🎬 Tea-Making Sequence
-
-The robot performs the following automated sequence:
-
-### **Phase 1: Square 1 - Pick Tea Bag** (104 points)
-1. 🟢 **Opens gripper**
-2. 📍 **Moves to pickup position**
-3. 🔴 **Closes gripper** (grabs tea bag)
-4. 🚶 **Moves tea bag** along square trajectory
-5. 🟢 **Opens gripper** (releases tea bag into cup)
-
-### **Phase 2: Square 2 - Reposition** (104 points)
-1. 🚶 **Moves to new location** (gripper open)
-2. 🔴 **Closes gripper** (prepares for next task)
-
-### **Phase 3: Square 2 Reverse - Return** (104 points)
-1. 🚶 **Returns along reverse path** (gripper closed)
-
-### **Phase 4: Transition - Prepare for Stirring** (42 points)
-1. 🚶 **Transitions to stirring position** (gripper closed)
-
-### **Phase 5: Circle - Stir Tea** (102 points × 3 repetitions)
-1. 🔁 **Performs circular stirring motion** 3 times
-2. ⚡ **Faster speed** for efficient stirring
-
-**Total Execution Time:** ~49 seconds
-
----
-
-## ⚙️ Gripper Configuration
-
-### Safety Settings
-The gripper is configured to prevent motor overload:
-
-```cpp
-GRIPPER_OPEN = 90.0°     → Servo: 180° (fully open)
-GRIPPER_CLOSED = 30.0°   → Servo: 120° (safe grip)
-GRIPPER_MIN_SAFE = 30.0° → Safety limit
-```
-
-### Adjusting Grip Strength
-If objects are slipping or motor is struggling, edit `receiver.ino`:
-
-**For tighter grip:**
-```cpp
-const float GRIPPER_CLOSED = 15.0;  // Tighter (Servo: 105°)
-```
-
-**For gentler grip:**
-```cpp
-const float GRIPPER_CLOSED = 40.0;  // Gentler (Servo: 130°)
-```
-
-⚠️ **Warning:** Never set below 10° to avoid motor damage!
-
----
-
-## � Trajectory File Format
-
-Each CSV file contains joint angles (in degrees):
-```
-J1, J2, J3, J4
-33.65, -4.69, 57.08, -89.94
-...
-```
-
-**Column Layout:**
-- **Column 1:** Joint 1 angle (degrees)
-- **Column 2:** Joint 2 angle (degrees)
-- **Column 3:** Joint 3 angle (degrees)
-- **Column 4:** Joint 4 angle (degrees)
-
-The gripper is controlled separately via commands, not trajectory files.
-
----
-
-## � Troubleshooting
-
-### Arduino Not Found
-- Check USB connection
-- Verify correct port in Arduino IDE and `send_trajectory.py`
-- Try unplugging and reconnecting Arduino
-
-### Python Script Errors
-**"Could not open port":**
-- Close Arduino Serial Monitor before running script
-- Update `SERIAL_PORT` in `send_trajectory.py`
-
-**"Module not found (serial)":**
 ```bash
-pip install pyserial
+uv run python hardware/arduino/send_trajectory.py --dry-run
 ```
 
-### Gripper Issues
-**Not gripping tightly enough:**
-- Reduce `GRIPPER_CLOSED` angle (e.g., from 30° to 15°)
+## Execute on Physical Hardware
 
-**Motor struggling/buzzing:**
-- Increase `GRIPPER_CLOSED` angle (e.g., from 15° to 40°)
+1. Flash `hardware/arduino/receiver/receiver.ino` to the Arduino Uno (`arduino-cli upload` or Arduino IDE).
+2. Connect the 12 V supply (regulated down for servo rails) with common ground to the Arduino.
+3. Run the sender script against your serial port:
 
-### Trajectory Issues
-**Robot jerky movement:**
-- Increase `DELAY_BETWEEN_POINTS` in `send_trajectory.py` (line 15)
-
-**CSV file not found:**
-- Ensure all CSV files are in `trajectories/` folder
-- Check file names match exactly
-
----
-
-## 🎛️ Customization
-
-### Modify Speed
-Edit `send_trajectory.py`:
-```python
-DELAY_BETWEEN_POINTS = 0.1  # Slower: increase (e.g., 0.2)
-CIRCLE_DELAY = 0.05         # Faster stirring: decrease (e.g., 0.03)
+```bash
+uv run python hardware/arduino/send_trajectory.py --port /dev/ttyACM0 --baud 115200
 ```
 
-### Change Trajectory
-Replace CSV files in `trajectories/` folder with your own trajectory data. Maintain the same format (4 columns for Joint 1-4).
+Replace `/dev/ttyACM0` with `/dev/cu.usbserial-110` on macOS or `COM3` on Windows.
 
-### Add New Phases
-Edit `send_trajectory.py` to add more CSV files and execution steps following the existing pattern.
+## Serial Protocol
 
----
-
-## 📝 Technical Details
-
-### Communication Protocol
-- **Baud Rate:** 115200
-- **Command Format:**
-  - Joint angles: `J1,J2,J3,J4\n`
-  - Gripper open: `GRIPPER_OPEN\n`
-  - Gripper close: `GRIPPER_CLOSE\n`
-- **Acknowledgment:** Arduino sends `READY` after each command
-
-### Joint Calibration
-Each joint has specific calibration offsets (see `receiver.ino`):
-- **Joint 1:** Direct mapping + 90° offset
-- **Joint 2:** Inverted + 110° offset
-- **Joint 3:** Inverted + 90° offset
-- **Joint 4:** Inverted + 110° offset
-- **Gripper:** Direct mapping + 90° offset
-
----
-
-## 📞 Support
-
-For issues or questions:
-1. Check the Troubleshooting section
-2. Verify all connections and settings
-3. Review serial monitor output for error messages
-
----
-
-## 🏆 Project Summary
-
-This 4-DOF robotic tea maker demonstrates:
-- ✅ Automated trajectory execution
-- ✅ Precise gripper control
-- ✅ Multi-phase task sequencing
-- ✅ Safe motor operation
-- ✅ Serial communication between Arduino and Python
-
-**Enjoy your automated tea! ☕🤖**
-
+- **Joint command:** `J:<j1>,<j2>,<j3>,<j4>\n` (angles in degrees; firmware maps mechanical offsets and clamps to `[0, 180]` deg servo range).
+- **Gripper commands:** `GRIPPER_OPEN\n` and `GRIPPER_CLOSE\n`.
+- **Handshake:** Arduino responds with `ARDUINO_CONNECTED` on boot and `READY` after executing each line.

@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    name: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          python-version: "3.13"
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Run Ruff lint
+        run: uv run ruff check .
+
+      - name: Check formatting on core Python modules and tests
+        run: >
+          uv run ruff format --check
+          tests/
+          hardware/arduino/send_trajectory.py
+          simulation/ros/src/my_robot_gazebo/scripts/kinematics.py
+          simulation/ros/src/my_robot_gazebo/scripts/validate_roundtrip.py
+
+      - name: Run pytest suite
+        run: uv run pytest -v
+
+      - name: Run offline kinematics roundtrip check
+        run: uv run python simulation/ros/src/my_robot_gazebo/scripts/validate_roundtrip.py
+
+      - name: Validate CSV trajectories via Arduino sender dry run
+        run: uv run python hardware/arduino/send_trajectory.py --dry-run
+
+  octave-validation:
+    name: octave-validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run MATLAB/Octave kinematics verification in GNU Octave container
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/workspace" -w /workspace \
+            gnuoctave/octave:9.2.0@sha256:100d394c57b86469748d26ddafcf73a1074338a66dabcababe2e4e05146772b9 \
+            octave --no-gui --quiet --eval "
+              set(0, 'defaultfigurevisible', 'off');
+              run('simulation/matlab/tests/test_forward_position.m');
+              run('simulation/matlab/tests/test_inverse_kinematics.m');
+              run('simulation/matlab/tests/test_velocity_kinematics.m');
+              run('simulation/matlab/tests/run_fk_4dof.m');
+              run('simulation/matlab/kinematics/create_jacobian_func.m');
+            "
+
+  arduino-compile:
+    name: arduino-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up arduino-cli
+        uses: arduino/setup-arduino-cli@81d310742121c928ea9c8bbd407b4217b432ae02 # v2.0.0
+
+      - name: Install AVR core and Servo library
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+          arduino-cli lib install Servo
+
+      - name: Compile receiver firmware
+        run: arduino-cli compile --warnings all --fqbn arduino:avr:uno hardware/arduino/receiver/receiver.ino
