@@ -34,6 +34,7 @@ build/
 .venv/
 venv/
 .ruff_cache/
+.pytest_cache/
 
 # ========================
 # MATLAB / Simulink
