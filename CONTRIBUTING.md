@@ -22,7 +22,7 @@ uv sync --locked
 
 ```bash
 uv run ruff check .
-uv run ruff format --check tests/ hardware/arduino/send_trajectory.py simulation/ros/src/my_robot_gazebo/scripts/kinematics.py simulation/ros/src/my_robot_gazebo/scripts/validate_roundtrip.py
+uv run ruff format --check .
 uv run pytest -v
 uv run python simulation/ros/src/my_robot_gazebo/scripts/validate_roundtrip.py
 uv run python hardware/arduino/send_trajectory.py --dry-run

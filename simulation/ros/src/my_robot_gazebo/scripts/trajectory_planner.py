@@ -25,6 +25,7 @@ def get_task_space_trajectory(X_start, X_end, total_time, dt):
 
     return time_steps, trajectory_points
 
+
 def get_circular_trajectory(center, radius, total_time, dt):
     """
     Generates a Circular Task-Space Trajectory in the XY plane (rotating around Z).
@@ -48,23 +49,25 @@ def get_circular_trajectory(center, radius, total_time, dt):
         # y = cy + r * sin(theta)
         x = center[0] + radius * np.cos(theta)
         y = center[1] + radius * np.sin(theta)
-        z = z_height # Constant Z
+        z = z_height  # Constant Z
 
         trajectory_points.append(np.array([x, y, z]))
         time_steps.append(t)
 
     return time_steps, trajectory_points
 
+
 def get_cubic_coeffs(q_start, q_end, tf):
-    """ Calculates coefficients for Cubic Polynomial: q(t) = c0 + c1*t + c2*t^2 + c3*t^3 """
+    """Calculates coefficients for Cubic Polynomial: q(t) = c0 + c1*t + c2*t^2 + c3*t^3"""
     c0 = q_start
     c1 = 0
-    c2 = 3 * (q_end - q_start) / (tf ** 2)
-    c3 = -2 * (q_end - q_start) / (tf ** 3)
+    c2 = 3 * (q_end - q_start) / (tf**2)
+    c3 = -2 * (q_end - q_start) / (tf**3)
     return c0, c1, c2, c3
 
+
 def get_joint_space_trajectory(q_start, q_end, total_time, dt):
-    """ Generates a Joint-Space Cubic Trajectory for all joints. """
+    """Generates a Joint-Space Cubic Trajectory for all joints."""
     steps = int(total_time / dt)
     num_joints = len(q_start)
 

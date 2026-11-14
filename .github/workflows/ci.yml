@@ -28,13 +28,8 @@ jobs:
       - name: Run Ruff lint
         run: uv run ruff check .
 
-      - name: Check formatting on core Python modules and tests
-        run: >
-          uv run ruff format --check
-          tests/
-          hardware/arduino/send_trajectory.py
-          simulation/ros/src/my_robot_gazebo/scripts/kinematics.py
-          simulation/ros/src/my_robot_gazebo/scripts/validate_roundtrip.py
+      - name: Check formatting across all Python files
+        run: uv run ruff format --check .
 
       - name: Run pytest suite
         run: uv run pytest -v
@@ -76,8 +71,8 @@ jobs:
       - name: Install AVR core and Servo library
         run: |
           arduino-cli core update-index
-          arduino-cli core install arduino:avr
-          arduino-cli lib install Servo
+          arduino-cli core install arduino:avr@1.8.8
+          arduino-cli lib install Servo@1.3.0
 
       - name: Compile receiver firmware
         run: arduino-cli compile --warnings all --fqbn arduino:avr:uno hardware/arduino/receiver/receiver.ino

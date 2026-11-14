@@ -10,17 +10,14 @@ from kinematics import (
 from std_msgs.msg import Float64, Float64MultiArray, MultiArrayDimension
 
 # Latest end-effector state from Gazebo
-ee_pos = None    # np.array([x, y, z])
+ee_pos = None  # np.array([x, y, z])
 ee_stamp = None  # float: time in seconds
 
 
 def ee_cb(msg):
     """Callback for /end_effector_pose."""
     global ee_pos, ee_stamp
-    ee_pos = np.array(
-        [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z],
-        dtype=float
-    )
+    ee_pos = np.array([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z], dtype=float)
     ee_stamp = msg.header.stamp.to_sec()
 
 
@@ -91,8 +88,7 @@ def run_forward_velocity_test(
     prev_t = None
     num_steps = int(max(duration, 0.0) / dt_cmd)
 
-    rospy.loginfo("Starting forward velocity loop (%d steps, dt_cmd=%.3f s)...",
-                  num_steps, dt_cmd)
+    rospy.loginfo("Starting forward velocity loop (%d steps, dt_cmd=%.3f s)...", num_steps, dt_cmd)
 
     for k in range(num_steps):
         if rospy.is_shutdown():
@@ -120,20 +116,23 @@ def run_forward_velocity_test(
 
                     # Log at the requested cadence to avoid spam
                     if log_every > 0 and k % log_every == 0:
-                        rospy.loginfo(
-                            "[Step %3d] q = %s",
-                            k, q.round(4).tolist()
-                        )
+                        rospy.loginfo("[Step %3d] q = %s", k, q.round(4).tolist())
                         rospy.loginfo(
                             "           EE_pos = [%.4f, %.4f, %.4f]",
-                            ee_pos[0], ee_pos[1], ee_pos[2]
+                            ee_pos[0],
+                            ee_pos[1],
+                            ee_pos[2],
                         )
                         rospy.loginfo(
                             "           V_theory_lin = [%.4f, %.4f, %.4f] m/s | "
                             "V_numeric = [%.4f, %.4f, %.4f] m/s | err_norm = %.6f",
-                            v_theory_lin[0], v_theory_lin[1], v_theory_lin[2],
-                            v_numeric[0], v_numeric[1], v_numeric[2],
-                            err_norm
+                            v_theory_lin[0],
+                            v_theory_lin[1],
+                            v_theory_lin[2],
+                            v_numeric[0],
+                            v_numeric[1],
+                            v_numeric[2],
+                            err_norm,
                         )
 
             prev_ee = ee_pos.copy()
@@ -150,19 +149,19 @@ def main():
 
     # Publishers for your 4 active joints (q1, q2, q3, q4_math->Joint_5)
     pubs = [
-        rospy.Publisher('/Joint_1/command', Float64, queue_size=10),
-        rospy.Publisher('/Joint_2/command', Float64, queue_size=10),
-        rospy.Publisher('/Joint_3/command', Float64, queue_size=10),
-        rospy.Publisher('/Joint_5/command', Float64, queue_size=10),
+        rospy.Publisher("/Joint_1/command", Float64, queue_size=10),
+        rospy.Publisher("/Joint_2/command", Float64, queue_size=10),
+        rospy.Publisher("/Joint_3/command", Float64, queue_size=10),
+        rospy.Publisher("/Joint_5/command", Float64, queue_size=10),
     ]
 
     # Jacobian publisher: 6x4 matrix, row-major
-    jac_pub = rospy.Publisher('/jacobian', Float64MultiArray, queue_size=10)
+    jac_pub = rospy.Publisher("/jacobian", Float64MultiArray, queue_size=10)
 
     # Subscribe to end-effector pose
-    rospy.Subscriber('/end_effector_pose', PoseStamped, ee_cb, queue_size=1)
+    rospy.Subscriber("/end_effector_pose", PoseStamped, ee_cb, queue_size=1)
     rospy.loginfo("Waiting for /end_effector_pose...")
-    rospy.wait_for_message('/end_effector_pose', PoseStamped, timeout=10.0)
+    rospy.wait_for_message("/end_effector_pose", PoseStamped, timeout=10.0)
     rospy.loginfo("/end_effector_pose is active.")
 
     # -------- Inverse Position Kinematics validation --------
@@ -184,8 +183,7 @@ def main():
     if ee_pos is not None:
         X_meas = ee_pos.copy()
         err = X_des - X_meas
-        rospy.loginfo("Gazebo EE pose: X=%.4f, Y=%.4f, Z=%.4f",
-                      X_meas[0], X_meas[1], X_meas[2])
+        rospy.loginfo("Gazebo EE pose: X=%.4f, Y=%.4f, Z=%.4f", X_meas[0], X_meas[1], X_meas[2])
         rospy.loginfo("||X_des - X_meas|| = %.6f m", np.linalg.norm(err))
     else:
         rospy.logwarn("No /end_effector_pose received after sending joints.")
