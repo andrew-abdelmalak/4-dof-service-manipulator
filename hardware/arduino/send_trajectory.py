@@ -113,12 +113,12 @@ def run_dry_run(phases: dict[str, list[list[float]]]) -> None:
     print(f"Total streamed points (with 3x circle): {streamed_points}")
     print("Sequence preview:")
     print(f"  1. {GRIPPER_OPEN_CMD.strip()}")
-    print(
-        f"  2. J:{phases['square1'][0][0]:.2f},{phases['square1'][0][1]:.2f},{phases['square1'][0][2]:.2f},{phases['square1'][0][3]:.2f}"
-    )
+    q0 = phases["square1"][0]
+    print(f"  2. {q0[0]:.2f},{q0[1]:.2f},{q0[2]:.2f},{q0[3]:.2f}")
     print(f"  3. {GRIPPER_CLOSE_CMD.strip()}")
     print(
-        f"  4. Stream remaining {len(phases['square1']) - 1} square1 points -> {GRIPPER_OPEN_CMD.strip()}"
+        f"  4. Stream remaining {len(phases['square1']) - 1} square1 points -> "
+        f"{GRIPPER_OPEN_CMD.strip()}"
     )
     print(f"  5. Stream {len(phases['square2'])} square2 points -> {GRIPPER_CLOSE_CMD.strip()}")
     print(f"  6. Stream {len(phases['square2_rev'])} square2_rev points")

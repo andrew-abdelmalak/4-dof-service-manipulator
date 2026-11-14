@@ -29,8 +29,8 @@ Verify the firmware compiles cleanly using `arduino-cli`:
 
 ```bash
 arduino-cli core update-index
-arduino-cli core install arduino:avr
-arduino-cli lib install Servo
+arduino-cli core install arduino:avr@1.8.8
+arduino-cli lib install Servo@1.3.0
 arduino-cli compile --warnings all --fqbn arduino:avr:uno hardware/arduino/receiver/receiver.ino
 ```
 
@@ -56,6 +56,6 @@ Replace `/dev/ttyACM0` with `/dev/cu.usbserial-110` on macOS or `COM3` on Window
 
 ## Serial Protocol
 
-- **Joint command:** `J:<j1>,<j2>,<j3>,<j4>\n` (angles in degrees; firmware maps mechanical offsets and clamps to `[0, 180]` deg servo range).
+- **Joint command:** `<j1>,<j2>,<j3>,<j4>\n` (comma-separated joint angles in degrees; firmware maps mechanical offsets and clamps to `[0, 180]` deg servo range).
 - **Gripper commands:** `GRIPPER_OPEN\n` and `GRIPPER_CLOSE\n`.
 - **Handshake:** Arduino responds with `ARDUINO_CONNECTED` on boot and `READY` after executing each line.

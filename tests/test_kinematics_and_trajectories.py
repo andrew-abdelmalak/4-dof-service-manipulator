@@ -218,10 +218,15 @@ def test_hardware_csv_waypoints_valid(filename: str, expected_rows: int) -> None
     assert np.all(np.abs(arr) <= 180.0)
 
 
-def test_send_trajectory_header_and_dry_run(tmp_path: Path) -> None:
-    """Header rows are skipped when present and CLI --dry-run succeeds."""
+def test_send_trajectory_header_and_dry_run(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Header rows are skipped when present and CLI --dry-run prints raw CSV wire commands."""
     send_traj = _load_send_trajectory()
     sample = tmp_path / "headered.csv"
     sample.write_text("q1,q2,q3,q4\n10.0,20.0,-30.0,40.0\n", encoding="utf-8")
     assert send_traj.load_trajectory_csv(sample) == [[10.0, 20.0, -30.0, 40.0]]
     assert send_traj.main(["--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert "J:" not in out
+    assert "  2. 33.66,-4.69,57.08,-89.94" in out
