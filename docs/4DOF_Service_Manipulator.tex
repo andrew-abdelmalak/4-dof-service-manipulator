@@ -1,0 +1,437 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage{multirow}
+\graphicspath{{source/extracted_images/}}
+
+\begin{document}
+
+\title{Design, Kinematic Analysis, and Experimental Validation of a 4-DOF Service Robotic Manipulator for Automated Beverage Preparation}
+
+\author{
+\IEEEauthorblockN{Andrew Abdelmalak}
+\IEEEauthorblockA{\textit{Dept. of Mechatronics Engineering} \\
+\textit{German University in Cairo (GUC)}\\
+Cairo, Egypt}
+\and
+\IEEEauthorblockN{Daniel Boules}
+\IEEEauthorblockA{\textit{Dept. of Mechatronics Engineering} \\
+\textit{German University in Cairo (GUC)}\\
+Cairo, Egypt}
+\and
+\IEEEauthorblockN{David Girgis}
+\IEEEauthorblockA{\textit{Dept. of Mechatronics Engineering} \\
+\textit{German University in Cairo (GUC)}\\
+Cairo, Egypt}
+\and
+\IEEEauthorblockN{Kirolous Kirolous}
+\IEEEauthorblockA{\textit{Dept. of Mechatronics Engineering} \\
+\textit{German University in Cairo (GUC)}\\
+Cairo, Egypt}
+\and
+\IEEEauthorblockN{Samir Yacoub}
+\IEEEauthorblockA{\textit{Dept. of Mechatronics Engineering} \\
+\textit{German University in Cairo (GUC)}\\
+Cairo, Egypt}
+\and
+\IEEEauthorblockN{Youssef Salama}
+\IEEEauthorblockA{\textit{Dept. of Mechatronics Engineering} \\
+\textit{German University in Cairo (GUC)}\\
+Cairo, Egypt}
+}
+
+\maketitle
+
+\begin{abstract}
+This paper presents the complete design, kinematic analysis, simulation, and experimental validation of a desktop-scale 4-DOF service robotic manipulator for automated beverage preparation. The manipulator is constructed from 3D-printed PLA components and actuated by three MG996R high-torque servos and three SG90 micro servos. Kinematic modeling follows the Denavit--Hartenberg convention with link lengths $d_1=0.04355$\,m, $a_2=0.140$\,m, $a_3=0.133$\,m, and $a_4=0.109$\,m. A numerical Newton--Raphson inverse kinematics solver achieves sub-millimeter position convergence ($<10^{-4}$\,m in ROS Python using Damped Least-Squares regularization with $\lambda=0.01$, and $<10^{-3}$\,m in MATLAB using the Moore--Penrose pseudoinverse), while warm-start joint recovery and undamped velocity roundtrip tests achieve machine-precision residuals ($10^{-17}$\,rad and $\le 2.2\times 10^{-15}$\,rad/s). Two task-space trajectories---a three-sided square path for pick-and-place operations and a circular path for stirring---are implemented and validated across Gazebo, Simscape Multibody, and physical hardware platforms. A tea-preparation demonstration involving sugar transport, spoon manipulation, and stirring confirms the system's capability for coordinated multi-step service tasks using accessible, educational-grade hardware.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Service robotics, robotic manipulator, Denavit--Hartenberg convention, inverse kinematics, trajectory planning, beverage preparation, 3D printing, Gazebo, Simscape.
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Service robotics is increasingly transforming customer-oriented industries by automating tasks that demand consistency, hygiene, and precision. Among these applications, beverage preparation has emerged as a key domain where robots can deliver uniform quality while reducing human workload~\cite{park2023}. Recent studies have demonstrated the growing acceptance of robotic baristas and automated food preparation systems, where robots are valued for their ability to operate continuously without fatigue.
+
+Several robotic coffee preparation systems have been proposed. Setiawan and Ma'arif~\cite{setiawan2021} developed a PLC-based coffee-stirring system with PID control, demonstrating how controlled motion improves drink uniformity and prevents spillage. Michalkov\'{a} et al.~\cite{michalkova2024} automated an espresso machine using a FANUC industrial arm and PLC logic, validating high-precision manipulators in caf\'{e} settings. Nurba et al.~\cite{nurba2022} developed a 3-DOF manipulator applying Denavit--Hartenberg (DH) forward kinematics, achieving repeatability deviations below 0.06\,mm. Salman et al.~\cite{salman2021} employed the DH convention to model a 3-DOF arm with MATLAB GUI simulation and Arduino-based actuation, while Waluyo et al.~\cite{waluyo2021} demonstrated an Arduino-based robot arm for coffee preparation.
+
+However, most existing systems either target industrial-scale automation or are limited to single-function prototypes. Limited attention has been given to compact, educational-grade manipulators tailored for multi-step service applications using accessible components. This paper addresses this gap through five contributions:
+\begin{enumerate}
+\item Design and fabrication of a 4-DOF desktop manipulator using 3D-printed parts and locally sourced servos.
+\item Complete DH-based kinematic modeling including forward kinematics, numerical inverse kinematics, and velocity kinematics with analytical Jacobian derivation.
+\item Dual-platform simulation validation in both Gazebo (ROS-integrated) and MATLAB Simscape Multibody.
+\item Task-space trajectory planning with square (pick-and-place) and circular (stirring) paths.
+\item Experimental validation on physical hardware through a tea-preparation demonstration.
+\end{enumerate}
+
+\section{System Design}
+
+\subsection{Mechanical Architecture}
+
+The manipulator possesses 4~Degrees of Freedom (DOF) and is constructed primarily from 3D-printed PLA parts, ensuring a lightweight yet rigid structure (Fig.~\ref{fig:cad}). The arm is actuated by six servo motors: three high-torque MG996R ($180^{\circ}$, metal gear) servos for the base, shoulder, and elbow joints, and three SG90 micro servos ($180^{\circ}$, plastic gear) for the wrist and gripper. One SG90 servo serves as a fixed dummy pivot to maintain the 4-DOF kinematic chain. Table~\ref{tab:hardware} summarizes the primary components.
+
+\begin{table}[H]
+\centering
+\caption{Hardware Components}
+\label{tab:hardware}
+\begin{tabular}{lc}
+\toprule
+\textbf{Component} & \textbf{Qty} \\
+\midrule
+3D Printed Parts (PLA) & 1 set \\
+MG996R Servo Motors & 3 \\
+SG90 Micro Servos & 3 \\
+Arduino Uno & 1 \\
+Power Supply (12V) & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{End-Effector Design}
+
+A parallel gripper serves as the primary end-effector, providing sufficient range and gripping force for lightweight objects such as cups and utensils. The inner surfaces of the jaws are lined with high-friction material to ensure stable grasping. The same gripper can hold a teaspoon attachment for instant beverage preparation, dispensing coffee powder or sugar before stirring---preserving modularity without additional tool-changing mechanisms.
+
+\subsection{Electronics and Communication}
+
+The system is powered by a 12V DC supply with a DC-DC step-down converter for voltage regulation. Control logic is executed on an Arduino Uno, which generates PWM signals to control servo positions. Communication between the PC-based trajectory planner and the Arduino operates at 115{,}200~baud using comma-separated joint angle strings (e.g., \texttt{"90,45,-30,0"}) with dedicated gripper commands (\texttt{GRIPPER\_OPEN}, \texttt{GRIPPER\_CLOSE}). A handshake protocol using a \texttt{"READY"} acknowledgment signal ensures motion synchronization. Table~\ref{tab:pins} summarizes the pin assignments.
+
+\begin{table}[H]
+\centering
+\caption{Arduino Pin Assignments and Calibration}
+\label{tab:pins}
+\begin{tabular}{lcl}
+\toprule
+\textbf{Joint} & \textbf{Pin} & \textbf{Calibration} \\
+\midrule
+Base (J1) & 3 & $q + 90^{\circ}$ \\
+Shoulder (J2) & 5 & $-q + 110^{\circ}$ \\
+Elbow (J3) & 6 & $-q + 90^{\circ}$ \\
+Wrist (J4) & 9 & $-q + 110^{\circ}$ \\
+Gripper & 10 & $q + 90^{\circ}$ (clamped) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\columnwidth]{page1_img1.jpeg}
+\caption{CAD model of the 4-DOF robotic manipulator showing the joint arrangement and structural proportions.}
+\label{fig:cad}
+\end{figure}
+
+\section{Kinematic Modeling}
+
+\subsection{Coordinate Frames and DH Parameters}
+
+Coordinate frames were assigned following the Denavit--Hartenberg convention~\cite{craig2005,siciliano2009} using the X--Z rule (Fig.~\ref{fig:frames}). The axes $x_1$, $x_2$, and $x_3$ lie in the same plane, while $z_1$ and $z_4$ are parallel. The $z_3$ axis is oriented opposite to $z_1$ and $z_4$, consistent with the DH convention for this manipulator. The resulting DH parameters are listed in Table~\ref{tab:dh}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\columnwidth]{page11_img1.jpeg}
+\caption{Denavit--Hartenberg coordinate frame assignment for the 4-DOF manipulator.}
+\label{fig:frames}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Denavit--Hartenberg Parameters}
+\label{tab:dh}
+\begin{tabular}{ccccc}
+\toprule
+\textbf{Link} & $\boldsymbol{\theta_i}$ & $\boldsymbol{d_i}$ \textbf{(m)} & $\boldsymbol{a_i}$ \textbf{(m)} & $\boldsymbol{\alpha_i}$ \textbf{(rad)} \\
+\midrule
+1 & $q_1$ & 0.04355 & 0 & $\pi/2$ \\
+2 & $q_2 + \pi/2$ & 0 & 0.140 & $\pi$ \\
+3 & $q_3$ & 0 & 0.133 & $\pi$ \\
+4 & $q_4$ & 0 & 0.109 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Forward Kinematics}
+
+The forward kinematics function $F(\mathbf{q})$ computes the end-effector position $\mathbf{X} = [x, y, z]^T$ from the joint vector $\mathbf{q} = [q_1, q_2, q_3, q_4]^T$. Each link transformation is computed using the standard DH matrix:
+\begin{equation}
+{}^{i-1}T_i = \begin{bmatrix}
+c_{\theta_i} & -s_{\theta_i}c_{\alpha_i} & s_{\theta_i}s_{\alpha_i} & a_i c_{\theta_i} \\
+s_{\theta_i} & c_{\theta_i}c_{\alpha_i} & -c_{\theta_i}s_{\alpha_i} & a_i s_{\theta_i} \\
+0 & s_{\alpha_i} & c_{\alpha_i} & d_i \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\label{eq:dh}
+\end{equation}
+where $c_{\theta_i} = \cos\theta_i$ and $s_{\theta_i} = \sin\theta_i$. The global transformation is obtained as ${}^0T_4 = {}^0T_1 \cdot {}^1T_2 \cdot {}^2T_3 \cdot {}^3T_4$. For the zero joint configuration ($q_1 = q_2 = q_3 = q_4 = 0$), the end-effector is elevated to $z = 0.42555$\,m along the base $z$-axis, which equals $d_1 + a_2 + a_3 + a_4 = 0.04355 + 0.140 + 0.133 + 0.109$\,m.
+
+The FK model was implemented identically in both MATLAB (\texttt{forward\_kinematics\_func.m}) and Python (ROS module \texttt{forward\_kinematics.py}), ensuring consistent results across analytical computation and simulation.
+
+\subsection{Inverse Position Kinematics}
+
+Since the manipulator has 4~DOF but targets 3D Cartesian positions without full 6-DOF end-effector orientation constraints, the position kinematics problem is solved numerically using Newton--Raphson iterations over the $3 \times 4$ linear Jacobian. The position error is defined as:
+\begin{equation}
+\mathbf{e}_k = \mathbf{X}_{\text{des}} - F(\mathbf{q}_k)
+\label{eq:ik_error}
+\end{equation}
+In the ROS/Python implementation, the joint angle update uses a Damped Least-Squares (DLS) formulation:
+\begin{equation}
+\Delta\mathbf{q} = J_v^T(\mathbf{q}) \left[ J_v(\mathbf{q}) J_v^T(\mathbf{q}) + \lambda^2 I_3 \right]^{-1} \mathbf{e}
+\label{eq:dls}
+\end{equation}
+where $J_v(\mathbf{q}) \in \mathbb{R}^{3 \times 4}$ is the analytical position Jacobian and $\lambda = 0.01$ is the damping factor for stability near singularities (whereas the MATLAB solver uses the undamped Moore--Penrose pseudoinverse $J_v^+(\mathbf{q})\mathbf{e}$).
+
+\subsection{Analytical Jacobian}
+
+The $3 \times 4$ position Jacobian $J_v(\mathbf{q}) = \partial F / \partial \mathbf{q}$ was derived analytically from $F(\mathbf{q}) = [-c_1 R,\ -s_1 R,\ d_1 + l_2 c_2 + l_3 c_\delta + l_4 c_\sigma]^T$, where $\delta = q_2 - q_3$, $\sigma = q_2 - q_3 + q_4$, $s_1 = \sin q_1$, $c_1 = \cos q_1$, $R = l_2 s_2 + l_3 s_\delta + l_4 s_\sigma$, $C = l_2 c_2 + l_3 c_\delta + l_4 c_\sigma$, $R' = l_3 s_\delta + l_4 s_\sigma$, and $C' = l_3 c_\delta + l_4 c_\sigma$:
+\begin{equation}
+J_v = \begin{bmatrix}
+s_1 R & -c_1 C & c_1 C' & -l_4 c_\sigma c_1 \\
+-c_1 R & -s_1 C & s_1 C' & -l_4 c_\sigma s_1 \\
+0 & -R & R' & -l_4 s_\sigma
+\end{bmatrix}
+\label{eq:jacobian}
+\end{equation}
+This analytical Jacobian matches central finite differences of $F(\mathbf{q})$ to within $10^{-9}$ across random workspace configurations.
+
+\subsection{Velocity Kinematics}
+
+Forward velocity kinematics relates joint velocities $\dot{\mathbf{q}}$ to the end-effector twist $\mathbf{V} = [v_x, v_y, v_z, \omega_x, \omega_y, \omega_z]^T$ via the $6 \times 4$ geometric Jacobian:
+\begin{equation}
+\mathbf{V} = J(\mathbf{q}) \cdot \dot{\mathbf{q}} = \begin{bmatrix} J_v(\mathbf{q}) \\ J_\omega(\mathbf{q}) \end{bmatrix} \dot{\mathbf{q}}
+\label{eq:vel_fk}
+\end{equation}
+The inverse velocity kinematics recovers joint velocities from a desired twist using the pseudo-inverse:
+\begin{equation}
+\dot{\mathbf{q}} = J^+(\mathbf{q}) \cdot \mathbf{V}_{\text{des}}
+\label{eq:vel_ik}
+\end{equation}
+Validation was performed by commanding joint velocities in Gazebo, computing the theoretical end-effector velocity $\mathbf{V}_{\text{theory}} = J(\mathbf{q})\dot{\mathbf{q}}$, and comparing it against the numerical velocity obtained from finite-difference position measurements. Both values showed close agreement, confirming the correctness of the Jacobian.
+
+\section{Trajectory Planning}
+
+The trajectory planner generates a sequence of end-effector positions $\mathbf{X}(t) = [x(t), y(t), z(t)]^T$ sampled at $T_s = 0.1$\,s. The IK solver converts these into joint angle sequences $\mathbf{q}(t)$.
+
+\subsection{Square Trajectory (Pick-and-Place)}
+
+The square trajectory is defined in the $Y$--$Z$ plane as a three-sided ``gate-like'' path connecting four waypoints for pick-and-place operations. The motion sequence consists of: (1)~vertical ascent from the pickup location $P_1$ to a safe height $P_2$; (2)~horizontal translation at the safe height to the drop-off column $P_3$; and (3)~vertical descent to the placement point $P_4$. Position is linearly interpolated between consecutive waypoints:
+\begin{equation}
+\mathbf{P}(t) = \mathbf{P}_{\text{start}} + \frac{t}{T_f}(\mathbf{P}_{\text{end}} - \mathbf{P}_{\text{start}})
+\label{eq:square}
+\end{equation}
+where $T_f = 2.0$\,s per segment in MATLAB (3.0\,s in the ROS trajectory node).
+
+\subsection{Circular Trajectory (Stirring)}
+
+The circular trajectory is defined in the $X$--$Y$ plane for stirring operations. Given center $\mathbf{C} = [c_x, c_y, c_z]$ and radius $r$:
+\begin{align}
+\theta(t) &= \frac{2\pi}{T_{\text{total}}} \cdot t \label{eq:theta} \\
+x(t) &= c_x + r\cos\theta(t) \label{eq:cx} \\
+y(t) &= c_y + r\sin\theta(t) \label{eq:cy} \\
+z(t) &= c_z \quad \text{(constant)} \label{eq:cz}
+\end{align}
+This ensures smooth continuous motion with constant angular velocity $\omega = 2\pi / T_{\text{total}}$, where $T_{\text{total}} = 10$\,s. Table~\ref{tab:params} summarizes the key planning parameters.
+
+\begin{table}[H]
+\centering
+\caption{Trajectory and IK Solver Parameters}
+\label{tab:params}
+\begin{tabular}{lc}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+Sampling time $T_s$ & 0.1\,s \\
+Square segment duration $T_f$ & 2.0\,s (MATLAB) / 3.0\,s (ROS) \\
+Circle total duration $T_{\text{total}}$ & 10\,s \\
+Damping factor $\lambda$ & 0.01 (ROS DLS) / 0 (MATLAB \texttt{pinv}) \\
+IK max iterations & 100 (MATLAB) / 500 (ROS) \\
+Position tolerance $\|\mathbf{e}\|$ & $10^{-3}$\,m (MATLAB) / $10^{-4}$\,m (ROS) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Simulation and Validation}
+
+\subsection{Dual-Platform Simulation}
+
+The kinematic model and trajectories were validated in two simulation environments: Gazebo (physics-based, ROS-integrated) and Simscape Multibody (system-level, MATLAB/Simulink). In Gazebo, Python ROS nodes published joint commands to the robot URDF model and queried the end-effector link pose via the \texttt{/gazebo/get\_link\_state} service (\texttt{my\_robot::EE\_frame} at 30\,Hz, republished to \texttt{/end\_effector\_pose} by \texttt{ee\_pose\_from\_gazebo.py}). In Simscape, the CAD assembly was imported into Simulink with MATLAB Function blocks computing FK for direct comparison.
+
+Both environments produced end-effector positions matching the analytical model for all tested configurations. Fig.~\ref{fig:sim} shows the robot models in both simulation environments.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\columnwidth}
+\includegraphics[width=\textwidth]{page12_img1.jpeg}
+\caption{Simscape Multibody}
+\label{fig:simscape}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\columnwidth}
+\includegraphics[width=\textwidth]{page12_img2.jpeg}
+\caption{Gazebo}
+\label{fig:gazebo}
+\end{subfigure}
+\caption{Robot models in both simulation environments.}
+\label{fig:sim}
+\end{figure}
+
+\subsection{Forward Kinematics Verification}
+
+Table~\ref{tab:fk} presents the FK verification results verified in both GNU Octave/MATLAB and Python, showing end-effector positions and velocities for two test configurations. The zero-configuration case yields the exact theoretical sum $z = 0.42555$\,m ($0.426$\,m rounded), confirming the DH parameter chain.
+
+\begin{table}[H]
+\centering
+\caption{Kinematic Benchmark Test Cases}
+\label{tab:fk}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{clll}
+\toprule
+\textbf{Case} & \textbf{Input $\mathbf{q}$ (rad)} & \textbf{Output $\mathbf{x}$ (m)} & \textbf{Output $\mathbf{V}$} \\
+\midrule
+1 & $[0,0,0,0]$ & $[0, 0, 0.42555]$ & $[0,0,0,0,0,0.1]$ \\
+2 & $[0.2,0.4,{-}0.3,0.1]$ & $[{-}0.214,{-}0.043,0.350]$ & $[{-}0.081,\ldots]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Inverse Kinematics Roundtrip Validation}
+
+Three roundtrip tests were executed across both the Python solver (\texttt{validate\_roundtrip.py}) and the Octave/MATLAB suite (\texttt{test\_velocity\_kinematics.m}), summarized in Table~\ref{tab:ik}. Starting from $\mathbf{q}_0 = \mathbf{0}$ (cold start), the position IK solver converges to within $5.66\times 10^{-5}$\,m in Python (under $10^{-4}$\,m tolerance) and $4.96\times 10^{-4}$\,m in Octave/MATLAB. When warm-started at the target pose, $\|\mathbf{q}_{\text{rec}} - \mathbf{q}\|$ is zero to machine precision ($\le 1.39\times 10^{-17}$\,rad). For velocity recovery, undamped Moore--Penrose \texttt{pinv} reproduces $\dot{\mathbf{q}}$ to $10^{-15}$\,rad/s, whereas DLS regularization ($\lambda=0.01$) introduces bounded bias up to $8.42\times 10^{-3}$\,rad/s in exchange for numerical stability near singularities.
+
+\begin{table}[H]
+\centering
+\caption{Python and Octave Roundtrip Validation}
+\label{tab:ik}
+\setlength{\tabcolsep}{2.5pt}
+\footnotesize
+\begin{tabular}{clccc}
+\toprule
+\textbf{Case} & \textbf{Input $\mathbf{q}$ (rad)} & $\|\mathbf{e}_{\text{cold}}\|$ (m) & $\|\Delta\dot{\mathbf{q}}_{\text{DLS}}\|$ & $\|\Delta\dot{\mathbf{q}}_{\text{pinv}}\|$ \\
+\midrule
+1 & $[0,0,0,0]$ & $0.00$ & $1.00{\times}10^{-5}$ & $0.00$ \\
+2 & $[0.2,0.4,{-}0.3,0.1]$ & $5.66{\times}10^{-5}$ & $5.00{\times}10^{-3}$ & $9.42{\times}10^{-16}$ \\
+3 & $[{-}0.3,0.6,0.2,{-}0.2]$ & $5.45{\times}10^{-5}$ & $8.42{\times}10^{-3}$ & $1.18{\times}10^{-15}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Trajectory Validation}
+
+Both square and circular trajectories were executed in Gazebo and Simscape, with joint-angle sequences generated by the custom Python planner. Fig.~\ref{fig:traj} shows the trajectory validation results. For the square path, the four corners were traced with high fidelity and distinct transitions between linear segments. For the circular path, the end-effector maintained constant $z$-height while tracing a nearly perfect circle in the $X$--$Y$ plane, with small deviations due to discretization and numerical IK residuals. The end-effector traces from Simscape closely matched Gazebo results, confirming cross-platform consistency despite differences in numerical integrators.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\columnwidth}
+\includegraphics[width=\textwidth]{page18_img1.jpeg}
+\caption{Circular trajectory}
+\label{fig:circle}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\columnwidth}
+\includegraphics[width=\textwidth]{page18_img2.jpeg}
+\caption{Square trajectory}
+\label{fig:square}
+\end{subfigure}
+\caption{Task-space trajectory validation results from simulation.}
+\label{fig:traj}
+\end{figure}
+
+\section{Hardware Implementation}
+
+\subsection{Assembly and Wiring}
+
+The physical manipulator was fully assembled from 3D-printed PLA parts with all servo motors mounted at their respective joints (Fig.~\ref{fig:hardware}). The robot's base is secured to a weighted wooden board to prevent tipping during high-speed movements. All electronics, including the Arduino Uno and motor connections, are housed in a protective enclosure. The circuit schematic (Fig.~\ref{fig:circuit}) shows the six servo motors connected to the Arduino's PWM pins, with the 12V external power regulated through a DC-DC converter.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\columnwidth]{page15_img3.jpeg}
+\caption{Circuit schematic: Arduino Uno connected to six servo motors (M1--M5 and EE) via PWM pins, with 12V external power and common ground.}
+\label{fig:circuit}
+\end{figure}
+
+\subsection{Open-Loop Validation}
+
+Initial hardware testing used Arduino scripts to sequentially actuate each motor through its full range of motion: base rotation, shoulder link, elbow link, wrist rotation, and gripper actuation. The fixed servo (motor~4) was confirmed stationary, consistent with the 4-DOF design. All active degrees of freedom responded correctly to commands, validating hardware readiness for trajectory execution.
+
+\subsection{Trajectory Execution}
+
+The joint-angle sequences computed by the trajectory planner were exported as CSV files and transmitted to the Arduino via a dedicated Python script (\texttt{send\_trajectory.py}) that reads files line-by-line and waits for \texttt{"READY"} acknowledgments. The circular trajectory produced smooth, continuous motor movement, validating the 0.1\,s time-step resolution. The square trajectory corners were reached with reasonable accuracy, with minor deviations attributed to mechanical backlash in servo gears and arm deflection under gravity at full extension.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\columnwidth]{page15_img1.jpeg}
+\caption{Fully assembled 4-DOF robotic manipulator in the experimental setup.}
+\label{fig:hardware}
+\end{figure}
+
+\section{Application: Tea Preparation}
+
+The tea-preparation scenario serves as the primary validation task, demonstrating coordinated task-space motion and gripper actuation in a realistic service context. The complete task consists of five motion phases executed sequentially:
+
+\begin{enumerate}
+\item \textbf{Sugar Transport:} The manipulator executes the first square trajectory to pick up a sugar cube from its container, transport it, and release it into the cup.
+\item \textbf{Spoon Approach:} A second square trajectory moves the end-effector to the spoon location and grasps the spoon handle.
+\item \textbf{Spoon Transport:} The arm lifts the spoon and transports it toward the cup using a reverse square path.
+\item \textbf{Linear Centering:} A short linear translation centers the spoon within the cup frame before stirring.
+\item \textbf{Stirring:} The robot performs the circular trajectory for three full cycles ($3 \times 10$\,s), maintaining the spoon vertically inside the cup.
+\end{enumerate}
+
+The complete 3D trajectory combining all phases is visualized in Fig.~\ref{fig:tea3d}, illustrating the spatial relationship between the task objects (sugar container, spoon, cup) and the robot's path.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\columnwidth]{page24_img1.jpeg}
+\caption{3D visualization of the complete tea-preparation trajectory, showing waypoints for sugar transport, spoon approach, and stirring.}
+\label{fig:tea3d}
+\end{figure}
+
+Qualitatively, the hardware execution matched the simulation behavior. The square corners were clearly visible in the arm motion, and the circular stirring appeared smooth and repeatable. Small deviations from ideal paths arise from servo backlash, link flexibility, open-loop control, and slight misalignments between modeled and actual object positions. Despite these imperfections, the system successfully demonstrated coordinated multi-step manipulation in a practical service task.
+
+\section{Discussion}
+
+The experimental results confirm that a low-cost, 3D-printed 4-DOF manipulator can perform multi-step beverage preparation tasks with acceptable repeatability for tabletop demonstrations. The DH-based kinematic model achieves sub-millimeter cold-start position convergence ($<10^{-4}$\,m in ROS Python) and machine-precision velocity roundtrip residuals ($\le 2.2\times 10^{-15}$\,rad/s under \texttt{pinv}), demonstrating that the analytical formulation is mathematically consistent across Octave/MATLAB and Python.
+
+Two structural limitations shape the current platform. First, because the arm has 4~DOF operating in 3D workspace coordinates, position IK leaves end-effector orientation unconstrained rather than controlling full 6-DOF pose. Second, the physical hardware executes open-loop servo commands without encoder feedback, making joint angles susceptible to gear backlash and structural deflection under gravity, particularly at abrupt square-trajectory corners; the smoother circular trajectory exhibits noticeably less chatter.
+
+The use of locally sourced components and 3D printing eliminates specialized industrial hardware, keeping the platform accessible for educational robotics laboratories.
+
+\section{Conclusion}
+
+This paper presented the development of a 4-DOF service robotic manipulator, covering mechanical CAD design, DH kinematic modeling, ROS/Gazebo and Simscape simulation, and Arduino hardware execution. The analytical forward kinematics and Jacobian agree with finite-difference checks to $10^{-9}$, cold-start position IK converges below $10^{-4}$\,m, and undamped velocity roundtrip tests achieve $10^{-15}$\,rad/s precision. Task-space square and circular trajectories were verified in simulation and demonstrated physically through a five-phase tea-preparation task.
+
+Future work will focus on closed-loop joint or vision feedback to compensate for servo backlash and gravity droop, along with wrist-pitch orientation constraints during liquid handling.
+
+\begin{thebibliography}{8}
+\bibitem{park2023}
+S.~Park, M.~K.~Park, J.~Heo, J.~S.~Hwang, S.~Hwang, D.~Kim, S.-J.~Chung, and H.~S.~Kwak, ``Robot versus human barista: Comparison of volatile compounds and consumers' acceptance, sensory profile, and emotional response of brewed coffee,'' \emph{Food Research International}, vol.~172, p.~113119, 2023.
+
+\bibitem{setiawan2021}
+A.~Setiawan and A.~Ma'arif, ``Stirring system design for automatic coffee maker using OMRON PLC and PID control,'' \emph{Int. J. Robotics and Control Systems}, vol.~1, no.~3, pp.~390--401, 2021.
+
+\bibitem{michalkova2024}
+S.~Michalkov\'{a}, K.~Wojnarowsk\'{y}, \v{S}.~Koleny\'{a}k, M.~Kantor, and J.~Arm, ``Automating the handling process of a coffee machine using a robotic manipulator,'' in \emph{Proc.\ XV Int. Symp. Industrial Electronics and Applications (INDEL)}, 2024, pp.~1--5.
+
+\bibitem{nurba2022}
+H.~P.~Nurba, D.~Hadian, N.~Lestari, K.~A.~Munastha, H.~Mistialustina, and E.~Rachmawati, ``Performance evaluation of 3~DOF arm robot with forward kinematics Denavit--Hartenberg method for coffee maker machine,'' in \emph{Proc.\ IEEE Int. Conf. Telecommunication Systems, Services, and Applications (TSSA)}, 2022, pp.~1--6.
+
+\bibitem{salman2021}
+H.~D.~Salman, M.~N.~Hamzah, and S.~H.~Bakhy, ``Kinematics analysis and implementation of three degrees of freedom robotic arm by using MATLAB,'' \emph{The Iraqi Journal for Mechanical and Materials Engineering}, vol.~21, no.~2, pp.~118--129, 2021.
+
+\bibitem{waluyo2021}
+A.~Waluyo, A.~Tafrikhatin, and S.~R.~Heri, ``Robot arm design for coffee maker Arduino based,'' in \emph{Proc.\ 2nd Borobudur Int. Symposium on Science and Technology (BIS-STE 2020)}, Atlantis Press, 2021, pp.~438--442.
+
+\bibitem{craig2005}
+J.~J.~Craig, \emph{Introduction to Robotics: Mechanics and Control}, 3rd~ed.\hskip 1em plus 0.5em minus 0.4em Pearson Prentice Hall, 2005.
+
+\bibitem{siciliano2009}
+B.~Siciliano, L.~Sciavicco, L.~Villani, and G.~Oriolo, \emph{Robotics: Modelling, Planning and Control}.\hskip 1em plus 0.5em minus 0.4em Springer, 2009.
+
+\end{thebibliography}
+
+\end{document}

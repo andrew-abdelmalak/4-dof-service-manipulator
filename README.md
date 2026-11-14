@@ -22,8 +22,8 @@ We designed, modeled, simulated, and built a desktop-scale **4-DOF service robot
 
 | Subsystem | Hardware or Software Stack | Role |
 |---|---|---|
-| Structure & CAD | 3D-printed PLA, SolidWorks (`.SLDPRT`, `.SLDASM`) | Desktop 4-DOF arm and gripper mechanism |
-| Electronics & Actuation | Arduino Uno, 3x MG996R, 3x SG90 (one fixed pivot), 12 V DC PSU | Open-loop PWM joint actuation and Proteus circuit (`hardware/circuits/`) |
+| Structure & CAD | 3D-printed PLA, SolidWorks (`.SLDASM`, `.STEP`) | Desktop 4-DOF arm and gripper mechanism |
+| Electronics & Actuation | Arduino Uno, 3x MG996R, 3x SG90 (one fixed pivot), 12 V DC PSU | Open-loop PWM joint actuation and Proteus schematic (`hardware/actuator_connections.pdsprj`) |
 | ROS / Gazebo Simulation | ROS Noetic, `my_robot_gazebo`, URDF, `/gazebo/get_link_state` at 30 Hz | Physics simulation, damped least-squares IK, trajectory execution |
 | MATLAB / Octave & Simscape | MATLAB R2023b+ / GNU Octave 9.2.0, Simscape `.slx` (13 rigid bodies) | Symbolic/numeric kinematics, `pinv` IK, multibody simulation |
 | Host Serial Sender | `hardware/arduino/send_trajectory.py` (`pyserial` at 115200 baud) | Streams 451 CSV waypoints with `READY` handshake |
@@ -68,7 +68,7 @@ We separate what was physically demonstrated in the university lab from what is 
 | Analytical vs FD linear Jacobian | $\le 5.86 \times 10^{-10}$ (20 configs `< 1e-8` in pytest) | `6.2143e-11` max diff (`create_jacobian_func.m`) |
 | Cold-start position IK ($q_0 = \mathbf{0}$) | $0$, $5.66 \times 10^{-5}$, $5.45 \times 10^{-5}\text{ m}$ | $0$, $4.96 \times 10^{-4}\text{ m}$ (`test_inverse_kinematics.m`) |
 | Warm-start joint recovery | $\le 1.39 \times 10^{-17}\text{ rad}$ | `0.0000e+00` rad (`test_velocity_kinematics.m`) |
-| Velocity roundtrip (`pinv`, $\lambda=0$) | $\le 1.10 \times 10^{-15}\text{ rad/s}$ | $1.21 \times 10^{-17}$ to $2.20 \times 10^{-15}\text{ rad/s}$ |
+| Velocity roundtrip (`pinv`, $\lambda=0$) | $0$, $9.42 \times 10^{-16}$, $1.18 \times 10^{-15}\text{ rad/s}$ ($\le 1.20 \times 10^{-15}$) | $1.21 \times 10^{-17}$ to $2.20 \times 10^{-15}\text{ rad/s}$ |
 | Velocity roundtrip (DLS, $\lambda=0.01$) | $1.00 \times 10^{-5}$, $5.00 \times 10^{-3}$, $8.42 \times 10^{-3}\text{ rad/s}$ | Uses `pinv` |
 
 <p align="center">
@@ -118,11 +118,11 @@ arduino-cli compile --warnings all --fqbn arduino:avr:uno hardware/arduino/recei
 ```text
 4-dof-service-manipulator/
 ├── .github/                  # CI workflow, Dependabot config, issue and PR templates
-├── docs/                     # Technical paper PDF, figures, architecture & social preview assets
+├── docs/                     # Technical paper (.tex/.pdf), figures, architecture & social preview assets
 ├── hardware/
+│   ├── actuator_connections.pdsprj  # Proteus schematic
 │   ├── arduino/              # receiver.ino firmware, send_trajectory.py CLI, 5 trajectory CSVs
-│   ├── cad/                  # SolidWorks .SLDPRT and .SLDASM files
-│   └── circuits/             # Proteus schematic (.pdsprj)
+│   └── cad/                  # SolidWorks .SLDASM assembly and 14 .STEP part files
 ├── simulation/
 │   ├── matlab/               # Kinematics, trajectory planners, Octave/MATLAB tests, Simscape .slx
 │   └── ros/src/my_robot_gazebo/  # URDF, controllers, launch file, ROS nodes and offline kinematics
