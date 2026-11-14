@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Setup & support guide
+    url: https://github.com/andrew-abdelmalak/4-dof-service-manipulator/blob/main/SUPPORT.md
+    about: Supported platforms, hardware limits, and setup guidance.
+  - name: Report a security vulnerability
+    url: https://github.com/andrew-abdelmalak/4-dof-service-manipulator/security/advisories/new
+    about: Report vulnerabilities privately instead of opening a public issue.

@@ -10,5 +10,5 @@ function V_spatial = forward_velocity_kinematics(q, q_dot)
 J = jacobian_matrix(q);   % 6x4
 
 % Compute end-effector velocity
-V_spatial = J * q_dot;          % 6x1 vector
+V_spatial = J * q_dot(:);       % 6x1 vector
 end

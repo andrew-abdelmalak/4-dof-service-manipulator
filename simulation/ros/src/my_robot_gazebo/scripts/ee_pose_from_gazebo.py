@@ -3,12 +3,13 @@ import rospy
 from gazebo_msgs.srv import GetLinkState
 from geometry_msgs.msg import PoseStamped
 
+
 def main():
     rospy.init_node("ee_pose_from_gazebo")
     link_name = rospy.get_param("~link_name", "my_robot::Gripper")
     ref_frame = rospy.get_param("~reference_frame", "world")
-    topic     = rospy.get_param("~topic", "end_effector_pose")
-    rate_hz   = rospy.get_param("~rate", 30)
+    topic = rospy.get_param("~topic", "end_effector_pose")
+    rate_hz = rospy.get_param("~rate", 30)
 
     rospy.wait_for_service("/gazebo/get_link_state")
     get_link = rospy.ServiceProxy("/gazebo/get_link_state", GetLinkState)
@@ -28,6 +29,6 @@ def main():
             rospy.logwarn_throttle(2.0, "get_link_state failed: %s", e)
         r.sleep()
 
+
 if __name__ == "__main__":
     main()
-

@@ -27,11 +27,11 @@ Servo servos[5];
 // 
 // Gripper Joint Angles (degrees):
 //   - GRIPPER_OPEN = 90.0°    → Servo Position: 180° (fully open)
-//   - GRIPPER_CLOSED = 15.0°  → Servo Position: 105° (TIGHTER grip for better hold)
-// 
-// Adjusted to 15.0° for tighter grip while maintaining motor safety
+//   - GRIPPER_CLOSED = 30.0°  → Servo Position: 120° (safe closed grip)
+//
+// Clamped at GRIPPER_MIN_SAFE = 30.0° to maintain motor safety
 const float GRIPPER_OPEN = 90.0;    // Fully open → Servo: 180°
-const float GRIPPER_CLOSED = 30.0;  // TIGHTER closing position → Servo: 105°
+const float GRIPPER_CLOSED = 30.0;  // Safe closed position → Servo: 120°
 
 // Maximum safe closing limit for gripper (safety check)
 const float GRIPPER_MIN_SAFE = 30.0;  // Minimum angle to prevent motor overload

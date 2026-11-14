@@ -14,13 +14,12 @@ from __future__ import annotations
 import numpy as np
 import rospy
 from geometry_msgs.msg import PoseStamped
-from std_msgs.msg import Float64
-
 from kinematics import (
+    forward_velocity_kinematics,
     inverse_kinematics_func,
     inverse_velocity_kinematics,
-    forward_velocity_kinematics,
 )
+from std_msgs.msg import Float64
 
 # ---------------------------------------------------------------------------
 # User-editable inputs
@@ -30,13 +29,13 @@ X_DES = np.array([0.0000, 0.0000, 0.3])  # desired EE pose [x, y, z]
 V_DES = np.array([0.000, 0.000, -0.100, 0.0, 0.0, 0.0])  # spatial velocity [m/s, rad/s]
 Q_INITIAL = np.array([0.0, 0.0, 0.0, 0.0])  # IK initial guess
 
-DT_CMD = 0.01        # command period (s)
+DT_CMD = 0.01  # command period (s)
 TEST_DURATION = 3.0  # time to run constant q_dot (s)
-SETTLE_TIME = 1.0    # hold start pose before commanding velocity (s)
-LOG_EVERY = 10       # log cadence in command steps
+SETTLE_TIME = 1.0  # hold start pose before commanding velocity (s)
+LOG_EVERY = 10  # log cadence in command steps
 
 # Globals updated from /end_effector_pose
-ee_pos = None    # np.array([x,y,z])
+ee_pos = None  # np.array([x,y,z])
 ee_stamp = None  # float seconds
 
 
@@ -64,9 +63,7 @@ def _as_spatial(vec):
     if vec.size == 3:
         return np.hstack((vec, np.zeros(3)))
     if vec.size != 6:
-        raise ValueError(
-            f"x_dot entries must have 3 or 6 numbers, received {vec.size}"
-        )
+        raise ValueError(f"x_dot entries must have 3 or 6 numbers, received {vec.size}")
     return vec
 
 
@@ -149,15 +146,15 @@ def main():
     rospy.init_node("velocity_path_node")
 
     pubs = [
-        rospy.Publisher('/Joint_1/command', Float64, queue_size=10),
-        rospy.Publisher('/Joint_2/command', Float64, queue_size=10),
-        rospy.Publisher('/Joint_3/command', Float64, queue_size=10),
-        rospy.Publisher('/Joint_5/command', Float64, queue_size=10),
+        rospy.Publisher("/Joint_1/command", Float64, queue_size=10),
+        rospy.Publisher("/Joint_2/command", Float64, queue_size=10),
+        rospy.Publisher("/Joint_3/command", Float64, queue_size=10),
+        rospy.Publisher("/Joint_5/command", Float64, queue_size=10),
     ]
 
-    rospy.Subscriber('/end_effector_pose', PoseStamped, ee_cb, queue_size=1)
+    rospy.Subscriber("/end_effector_pose", PoseStamped, ee_cb, queue_size=1)
     rospy.loginfo("Waiting for /end_effector_pose...")
-    rospy.wait_for_message('/end_effector_pose', PoseStamped, timeout=10.0)
+    rospy.wait_for_message("/end_effector_pose", PoseStamped, timeout=10.0)
     rospy.loginfo("/end_effector_pose is active.")
 
     x_des = np.asarray(X_DES, dtype=float).ravel()

@@ -1,49 +1,62 @@
 # my_robot_gazebo (ROS Noetic + Gazebo Classic)
 
-This package lets you spawn your **URDF** robot in Gazebo quickly, without scaling changes.
+We built the `my_robot_gazebo` catkin package to model, visualize, and simulate our 4-DOF service robotic manipulator in ROS Noetic, RViz, and Gazebo Classic, while also exposing standalone offline kinematics and trajectory scripts.
 
-## 1) Drop your files
-- Put your URDF at: `urdf/robot.urdf` (rename your file to `robot.urdf` or update the launch arg `urdf_file`).
-- Put all mesh files under: `meshes/`. Keep the same relative paths used in your URDF.
-  - Mesh references inside URDF should look like: `filename="package://my_robot_gazebo/meshes/<your_mesh.stl or dae>"`
+## Package Layout
 
-> **Note:** No scaling is applied. If your meshes were exported with real dimensions, they will be used as-is.
-
-## 2) Build in a Catkin workspace
-```bash
-# If you don't have a workspace yet:
-mkdir -p ~/catkin_ws/src
-cd ~/catkin_ws/src
-# Copy or unzip this package into src/
-# e.g., cp -r /path/to/my_robot_gazebo .
-cd ..
-catkin_make
-source devel/setup.bash
-# For convenience, add to your ~/.bashrc:
-# echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
+```text
+my_robot_gazebo/
+├── config/controllers.yaml     # JointStateController and per-joint PID parameters
+├── launch/
+│   ├── spawn_gazebo.launch     # Gazebo world, URDF spawn, kinematic driver, and EE pose publisher
+│   └── view_model.launch       # RViz visualization with joint_state_publisher_gui
+├── meshes/                     # Binary STL meshes referenced by urdf/robot.urdf
+├── models/my_robot/            # Gazebo model configuration and SDF metadata
+├── rviz/model_view.rviz        # Preconfigured RViz display settings
+├── scripts/                    # Kinematics, planners, ROS validation nodes, and offline checks
+├── urdf/robot.urdf             # 5-joint URDF with fixed Joint_4 to enforce the 4-DOF chain
+├── worlds/stable.world         # Gazebo simulation world
+├── CMakeLists.txt
+└── package.xml
 ```
 
-## 3) Spawn in Gazebo
+## Build in a Catkin Workspace
+
+Link or copy this package into a ROS Noetic workspace and build with `catkin_make`:
+
+```bash
+mkdir -p ~/catkin_ws/src
+ln -s /path/to/4-dof-service-manipulator/simulation/ros/src/my_robot_gazebo ~/catkin_ws/src/my_robot_gazebo
+cd ~/catkin_ws
+catkin_make
+source devel/setup.bash
+```
+
+## Launch Simulation and Visualization
+
+- **Gazebo simulation:** Starts `worlds/stable.world`, spawns `urdf/robot.urdf` as `my_robot`, launches `kinematic_joint_driver.py` (30 Hz), and publishes `end_effector_pose` from `/gazebo/get_link_state` for `my_robot::EE_frame`:
+
 ```bash
 roslaunch my_robot_gazebo spawn_gazebo.launch
 ```
-- To use a different URDF file name:
-```bash
-roslaunch my_robot_gazebo spawn_gazebo.launch urdf_file:=$(rospack find my_robot_gazebo)/urdf/YOUR_FILE.urdf
-```
-- Adjust initial pose:
-```bash
-roslaunch my_robot_gazebo spawn_gazebo.launch x:=1.0 y:=2.0 z:=0.2 Y:=1.57
-```
 
-## 4) Quick RViz check (no Gazebo)
+- **RViz model check (no Gazebo):** Opens `urdf/robot.urdf` with interactive joint sliders:
+
 ```bash
 roslaunch my_robot_gazebo view_model.launch
 ```
 
-## Troubleshooting
-- **Meshes not showing**: Ensure URDF uses `package://my_robot_gazebo/meshes/...` and the files exist.
-- **xacro error**: Even with plain URDF, `xacro` can parse it. If it fails, change:
-  - In launch files, replace `$(find xacro)/xacro $(arg urdf_file)` with `cat $(arg urdf_file)`.
-- **Collisions/inertias**: Gazebo needs valid `<inertial>` and `<collision>` for each link for stable physics.
-- **Gazebo not installed**: Use `sudo apt install ros-noetic-gazebo-ros-pkgs ros-noetic-gazebo-ros-control`.
+- **Trajectory execution:** Streams the five tea-preparation phases (`square1`, `square2`, `square2_rev`, `transition`, `circle`):
+
+```bash
+rosrun my_robot_gazebo trajectory_node.py
+```
+
+## Offline Python Checks (No ROS Installation Required)
+
+We decoupled the kinematics and roundtrip checks from `rospy` so they run directly with `uv` on any host:
+
+```bash
+uv run python simulation/ros/src/my_robot_gazebo/scripts/forward_kinematics.py
+uv run python simulation/ros/src/my_robot_gazebo/scripts/validate_roundtrip.py
+```

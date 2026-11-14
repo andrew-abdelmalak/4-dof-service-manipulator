@@ -1,10 +1,10 @@
 # CAD Files
 
-SolidWorks CAD design files for the 4-DOF service robotic manipulator.
+SolidWorks CAD design files that we created for the 4-DOF service robotic manipulator.
 
 ## Assembly
 
-- **`5_DOF_Robot_Assembly.SLDASM`** — Full SolidWorks assembly (requires SolidWorks 2020+)
+- **`5_DOF_Robot_Assembly.SLDASM`**: Full SolidWorks assembly (requires SolidWorks 2020+)
 
 ## Part Files (STEP)
 
@@ -27,8 +27,8 @@ Individual part exports in STEP format (universal, compatible with any CAD softw
 
 ## Mesh Exports
 
-STL mesh files used for Gazebo/RViz visualization are located at:
+STL mesh files that we exported for Gazebo/RViz visualization live at:
 
-```
+```text
 simulation/ros/src/my_robot_gazebo/meshes/
 ```

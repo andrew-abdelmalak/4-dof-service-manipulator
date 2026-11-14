@@ -115,29 +115,3 @@ filename_mat = 'robot_tea_data.mat';
 save(filename_mat, 'q1_ts', 'q2_ts', 'q3_ts', 'q4_ts', 'q1', 'q2', 'q3', 'q4', 'time_steps');
 
 fprintf('DONE. Data saved to: %s\n', filename_mat);
-
-
-% --- HELPER: SQUARE PATH GENERATOR ---
-function [time_vec, points] = get_square_path(start_pos, end_pos, safe_z, duration, dt)
-    % 1. Lift
-    t_lift = duration * 0.25;
-    steps_lift = floor(t_lift/dt);
-    z_lift = linspace(start_pos(3), safe_z, steps_lift);
-    p1 = [repmat(start_pos(1:2), 1, steps_lift); z_lift];
-    
-    % 2. Move
-    t_move = duration * 0.50;
-    steps_move = floor(t_move/dt);
-    x_move = linspace(start_pos(1), end_pos(1), steps_move);
-    y_move = linspace(start_pos(2), end_pos(2), steps_move);
-    p2 = [x_move; y_move; repmat(safe_z, 1, steps_move)];
-    
-    % 3. Lower
-    t_lower = duration * 0.25;
-    steps_lower = floor(t_lower/dt);
-    z_lower = linspace(safe_z, end_pos(3), steps_lower);
-    p3 = [repmat(end_pos(1:2), 1, steps_lower); z_lower];
-    
-    points = [p1, p2, p3];
-    time_vec = (0:(size(points,2)-1)) * dt;
-end
